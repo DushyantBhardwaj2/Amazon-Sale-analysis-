@@ -1,0 +1,93 @@
+:root {
+  --bg-start: #f8efe6;
+  --bg-end: #e7f0e2;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(37, 74, 53, 0.2);
+  --text-main: #1f2a21;
+  --text-muted: #5b6f60;
+  --accent: #2c7a4b;
+  --accent-soft: #cfe8d6;
+}
+
+html, body, [class*="css"] {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--text-main);
+}
+
+.stApp {
+  background: radial-gradient(circle at 20% 20%, #fff8f2 0%, transparent 35%),
+              radial-gradient(circle at 90% 10%, #e6f4ea 0%, transparent 30%),
+              linear-gradient(120deg, var(--bg-start), var(--bg-end));
+}
+
+.block-container {
+  padding-top: 1.6rem;
+}
+
+.hero {
+  background: linear-gradient(135deg, rgba(44, 122, 75, 0.95), rgba(24, 62, 41, 0.95));
+  color: #f7fbf8;
+  padding: 1.2rem 1.4rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 10px 30px rgba(20, 47, 31, 0.22);
+  margin-bottom: 1rem;
+}
+
+.hero h1 {
+  font-size: 1.8rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.hero p {
+  margin: 0.5rem 0 0;
+  color: #dcefe2;
+}
+
+.metric-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 6px 20px rgba(25, 45, 31, 0.08);
+}
+
+.metric-title {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.metric-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0.2rem 0 0;
+  color: var(--text-main);
+}
+
+.section-title {
+  margin-top: 0.35rem;
+  margin-bottom: 0.3rem;
+  color: #1e4a30;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+[data-testid="stSidebar"] {
+  background: linear-gradient(180deg, #203d2e, #16271f);
+}
+
+[data-testid="stSidebar"] * {
+  color: #eaf6ee;
+}
+
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 1.35rem;
+  }
+
+  .metric-value {
+    font-size: 1.2rem;
+  }
+}
