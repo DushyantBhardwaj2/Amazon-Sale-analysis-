@@ -9,6 +9,30 @@ from fastapi.middleware.cors import CORSMiddleware
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "AmazonSalesData.csv"
 
+BASE_COLUMNS = [
+    "Region",
+    "Country",
+    "Item Type",
+    "Sales Channel",
+    "Order Priority",
+    "Order Date",
+    "Order ID",
+    "Ship Date",
+    "Units Sold",
+    "Unit Price",
+    "Unit Cost",
+    "Total Revenue",
+    "Total Cost",
+    "Total Profit",
+]
+
+DERIVED_COLUMNS = ["Event Time", "Year", "Month", "Margin %"]
+
+
+def _empty_sales_data() -> pd.DataFrame:
+    # Keep schema stable so API endpoints can return empty payloads safely.
+    return pd.DataFrame(columns=BASE_COLUMNS + DERIVED_COLUMNS)
+
 app = FastAPI(title="Amazon Sales Analytics API", version="1.0.0")
 
 raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
@@ -41,6 +65,9 @@ def _coerce_numeric(pdf: pd.DataFrame) -> pd.DataFrame:
 @lru_cache(maxsize=1)
 def load_sales_data() -> pd.DataFrame:
     """Load CSV once and derive fields used across API endpoints."""
+    if not DATA_PATH.exists():
+        return _empty_sales_data()
+
     use_spark_backend = os.getenv("USE_SPARK_BACKEND", "0") == "1"
 
     if use_spark_backend:

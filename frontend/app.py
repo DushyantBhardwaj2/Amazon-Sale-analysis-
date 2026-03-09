@@ -250,7 +250,9 @@ def main() -> None:
         health = get_health(api_base)
     except requests.RequestException:
         st.error(
-            "Cannot reach FastAPI backend. Start API first: `uvicorn backend.main:app --reload` from project root."
+            "Cannot reach FastAPI backend at "
+            f"`{api_base}`. If running locally, start API with `uvicorn backend.main:app --reload`. "
+            "If deployed on Render, verify backend service is healthy and `SALES_API_BASE` points to its live URL."
         )
         st.stop()
 
