@@ -239,33 +239,3 @@ streamlit run frontend/app.py
 Frontend reads metrics and chart data from FastAPI endpoints. If PySpark is not available, backend falls back to pandas-based loading.
 
 Optional: run backend with Spark-based loading (slower startup) by setting `USE_SPARK_BACKEND=1` before starting uvicorn.
-
-## Deploy (Render Blueprint)
-
-This repository now includes `render.yaml` so you can deploy backend + frontend as two web services from one file.
-
-### Steps
-
-1. Push this project to your GitHub repository.
-2. Open Render and choose **New + > Blueprint**.
-3. Connect your GitHub repo and select this project.
-4. Render reads `render.yaml` and prepares both services:
-     - `amazon-sales-backend`
-     - `amazon-sales-frontend`
-5. After backend deploys, copy backend URL and update frontend env var:
-     - `SALES_API_BASE=https://<your-backend-service>.onrender.com`
-6. Redeploy frontend service.
-
-### Recommended Environment Variables
-
-- Backend:
-    - `USE_SPARK_BACKEND=0`
-    - `ALLOWED_ORIGINS=https://<your-frontend-service>.onrender.com`
-- Frontend:
-    - `SALES_API_BASE=https://<your-backend-service>.onrender.com`
-
-### Validate Deployment
-
-- Backend docs: `https://<your-backend-service>.onrender.com/docs`
-- Backend health: `https://<your-backend-service>.onrender.com/health`
-- Frontend app: `https://<your-frontend-service>.onrender.com`

@@ -33,6 +33,61 @@ def _empty_sales_data() -> pd.DataFrame:
     # Keep schema stable so API endpoints can return empty payloads safely.
     return pd.DataFrame(columns=BASE_COLUMNS + DERIVED_COLUMNS)
 
+
+def _demo_sales_data() -> pd.DataFrame:
+    """Provide a local fallback dataset so dashboards still render without CSV."""
+    regions = [
+        ("Asia", "India"),
+        ("Europe", "Germany"),
+        ("Sub-Saharan Africa", "Nigeria"),
+        ("Middle East and North Africa", "Egypt"),
+        ("North America", "United States"),
+        ("Central America and the Caribbean", "Mexico"),
+    ]
+    item_types = ["Office Supplies", "Cosmetics", "Household", "Baby Food", "Clothes"]
+    channels = ["Online", "Offline"]
+    priorities = ["L", "M", "H", "C"]
+
+    rows: list[dict[str, Any]] = []
+    start = pd.Timestamp("2022-01-01")
+
+    for i in range(360):
+        region, country = regions[i % len(regions)]
+        item_type = item_types[i % len(item_types)]
+        channel = channels[i % len(channels)]
+        priority = priorities[i % len(priorities)]
+
+        units = 60 + (i % 140)
+        unit_price = 20.0 + float((i * 3) % 80)
+        unit_cost = round(unit_price * 0.62, 2)
+        total_revenue = round(units * unit_price, 2)
+        total_cost = round(units * unit_cost, 2)
+        total_profit = round(total_revenue - total_cost, 2)
+
+        order_date = start + pd.Timedelta(days=i)
+        ship_date = order_date + pd.Timedelta(days=(i % 7) + 1)
+
+        rows.append(
+            {
+                "Region": region,
+                "Country": country,
+                "Item Type": item_type,
+                "Sales Channel": channel,
+                "Order Priority": priority,
+                "Order Date": order_date,
+                "Order ID": 100000 + i,
+                "Ship Date": ship_date,
+                "Units Sold": units,
+                "Unit Price": unit_price,
+                "Unit Cost": unit_cost,
+                "Total Revenue": total_revenue,
+                "Total Cost": total_cost,
+                "Total Profit": total_profit,
+            }
+        )
+
+    return pd.DataFrame(rows)
+
 app = FastAPI(title="Amazon Sales Analytics API", version="1.0.0")
 
 raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
@@ -66,27 +121,27 @@ def _coerce_numeric(pdf: pd.DataFrame) -> pd.DataFrame:
 def load_sales_data() -> pd.DataFrame:
     """Load CSV once and derive fields used across API endpoints."""
     if not DATA_PATH.exists():
-        return _empty_sales_data()
+        pdf = _demo_sales_data()
+    else:
+        use_spark_backend = os.getenv("USE_SPARK_BACKEND", "0") == "1"
 
-    use_spark_backend = os.getenv("USE_SPARK_BACKEND", "0") == "1"
+        if use_spark_backend:
+            try:
+                from pyspark.sql import SparkSession
+                from pyspark.sql.functions import col, to_date
 
-    if use_spark_backend:
-        try:
-            from pyspark.sql import SparkSession
-            from pyspark.sql.functions import col, to_date
-
-            spark = SparkSession.builder.appName("AmazonSalesBackend").master("local[*]").getOrCreate()
-            sdf = spark.read.csv(str(DATA_PATH), header=True, inferSchema=True)
-            sdf = sdf.withColumn("Order Date", to_date(col("Order Date"), "M/d/yyyy"))
-            pdf = sdf.toPandas()
-            spark.stop()
-        except Exception:
+                spark = SparkSession.builder.appName("AmazonSalesBackend").master("local[*]").getOrCreate()
+                sdf = spark.read.csv(str(DATA_PATH), header=True, inferSchema=True)
+                sdf = sdf.withColumn("Order Date", to_date(col("Order Date"), "M/d/yyyy"))
+                pdf = sdf.toPandas()
+                spark.stop()
+            except Exception:
+                pdf = pd.read_csv(DATA_PATH)
+                pdf["Order Date"] = pd.to_datetime(pdf["Order Date"], format="%m/%d/%Y", errors="coerce")
+        else:
+            # Default to pandas for instant startup in demos and classroom systems.
             pdf = pd.read_csv(DATA_PATH)
             pdf["Order Date"] = pd.to_datetime(pdf["Order Date"], format="%m/%d/%Y", errors="coerce")
-    else:
-        # Default to pandas for instant startup in demos and classroom systems.
-        pdf = pd.read_csv(DATA_PATH)
-        pdf["Order Date"] = pd.to_datetime(pdf["Order Date"], format="%m/%d/%Y", errors="coerce")
 
     pdf = _coerce_numeric(pdf)
     pdf = pdf.dropna(subset=["Order Date"]).copy()

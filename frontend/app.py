@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 
 import pandas as pd
 import plotly.express as px
@@ -7,7 +6,7 @@ import requests
 import streamlit as st
 
 STYLE_PATH = Path(__file__).resolve().parent / "styles.css"
-DEFAULT_API_BASE = os.getenv("SALES_API_BASE", "http://127.0.0.1:8000")
+DEFAULT_API_BASE = "http://127.0.0.1:8000"
 
 
 def _api_get(api_base: str, endpoint: str, params: dict | None = None) -> dict:
@@ -151,13 +150,17 @@ def render_distributed_story(api_base: str, total_rows: int) -> None:
     batch_size = st.sidebar.slider("Micro-batch size", min_value=5, max_value=120, value=30, step=5)
     max_cursor = max(batch_size, total_rows)
     default_cursor = min(max(batch_size * 4, batch_size), max_cursor)
-    stream_cursor = st.sidebar.slider(
-        "Stream position",
-        min_value=batch_size,
-        max_value=max_cursor,
-        value=default_cursor,
-        step=batch_size,
-    )
+    if max_cursor == batch_size:
+        stream_cursor = batch_size
+        st.sidebar.caption("Stream position is fixed because current data is smaller than one batch.")
+    else:
+        stream_cursor = st.sidebar.slider(
+            "Stream position",
+            min_value=batch_size,
+            max_value=max_cursor,
+            value=default_cursor,
+            step=batch_size,
+        )
     lookback_batches = st.sidebar.slider("Lookback batches", min_value=1, max_value=10, value=4, step=1)
 
     payload = get_distributed(api_base, batch_size, stream_cursor, lookback_batches)
@@ -251,8 +254,7 @@ def main() -> None:
     except requests.RequestException:
         st.error(
             "Cannot reach FastAPI backend at "
-            f"`{api_base}`. If running locally, start API with `uvicorn backend.main:app --reload`. "
-            "If deployed on Render, verify backend service is healthy and `SALES_API_BASE` points to its live URL."
+            f"`{api_base}`. Start API locally with `uvicorn backend.main:app --reload` from project root."
         )
         st.stop()
 
