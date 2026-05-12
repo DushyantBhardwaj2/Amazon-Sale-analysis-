@@ -120,8 +120,8 @@ def render_analytics():
     with tab1:
         region_profit = df.groupby("Region")["Total Profit"].sum().idxmax()
         region_profit_val = df.groupby("Region")["Total Profit"].sum().max()
-        country_profit = df[df["Region"] == region_profit].groupBy("Country")["Total Profit"].sum().idxmax()
-        country_profit_val = df[df["Region"] == region_profit].groupBy("Country")["Total Profit"].sum().max()
+        country_profit = df[df["Region"] == region_profit].groupby("Country")["Total Profit"].sum().idxmax()
+        country_profit_val = df[df["Region"] == region_profit].groupby("Country")["Total Profit"].sum().max()
         st.metric("Highest Profit Region", region_profit, f"${region_profit_val:,.0f}")
         st.metric("Country with Highest Profit", country_profit, f"${country_profit_val:,.0f}")
 
